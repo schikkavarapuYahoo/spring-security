@@ -9,7 +9,7 @@ Learning &amp; Build spring security
     1. User-name
     2. Password (Must be encoded)
     3. Roles(ROLE-NAME Must be in caps)
-    4. Authorities
+    4. Authorities (or) Permissions ? 
 
 2. These all details are available in a spring class 
          => org.springframework.security.core.userdetails.UserDetails

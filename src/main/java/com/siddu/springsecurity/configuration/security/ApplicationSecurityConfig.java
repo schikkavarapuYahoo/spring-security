@@ -3,6 +3,7 @@ package com.siddu.springsecurity.configuration.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -12,8 +13,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+import static com.siddu.springsecurity.configuration.security.ApplicationUserRole.*;
+
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(securedEnabled = true)
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
@@ -26,9 +30,12 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
+        http.
+                csrf().disable()
+                .authorizeRequests()
                 .antMatchers("/", "/css/*", "/js/*").permitAll()
-                .antMatchers("/api/**").hasRole(ApplicationUserRole.STUDENT.name())
+                .antMatchers("/api/**").hasRole(STUDENT.name())
+                .antMatchers("/management/api/**").hasAnyRole(ADMIN.name(), GA.name())
                 .anyRequest()
                 .authenticated().and()
                 .httpBasic();
@@ -40,14 +47,23 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
         UserDetails adminUser = User.builder().username("admin")
                 .password(passwordEncoder.encode("adminPwd"))
-                .roles(ApplicationUserRole.ADMIN.name())
+                .authorities(ADMIN.getGrantedAuthorities())
+//                .roles(ADMIN.name())
+                .build();
+
+        UserDetails ga = User.builder().username("ga")
+                .password(passwordEncoder.encode("gaPwd"))
+                .authorities(GA.getGrantedAuthorities())
+//                .roles(GA.name())
                 .build();
 
         UserDetails sidStudentUser = User.builder()
                 .username("siddu")
                 .password(passwordEncoder.encode("asdf10"))
-                .roles(ApplicationUserRole.STUDENT.name()).build();
+                .authorities(STUDENT.getGrantedAuthorities())
+//                .roles(STUDENT.name())
+                .build();
 
-        return new InMemoryUserDetailsManager(adminUser, sidStudentUser);
+        return new InMemoryUserDetailsManager(adminUser, sidStudentUser, ga);
     }
 }
